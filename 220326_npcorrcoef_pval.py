@@ -29,7 +29,8 @@ def corrcoef_pval(matrix):
     p[np.tril_indices(p.shape[0], -1)] = p.T[np.tril_indices(p.shape[0], -1)]
     p[np.diag_indices(p.shape[0])] = np.ones(p.shape[0])
 
-    # Then we correct for multiple testing using holm method (Very restrictive, maybe set this as an arugment for the user). This adj. pvalue will be used for filtering later on.
+    # Then we correct for multiple testing using holm method (Very restrictive, maybe set this as an arugment for the
+    # user). This adj. pvalue will be used for filtering later on.
     padj = np.zeros(shape=r.shape)
     padj[np.triu_indices(padj.shape[0], 1)] = multipletests(pf, method="holm")[1]
     padj[np.tril_indices(padj.shape[0], -1)] = padj.T[np.tril_indices(padj.shape[0], -1)]
@@ -38,22 +39,25 @@ def corrcoef_pval(matrix):
     # min(padj)
     return r, p, padj
 
+
 def corrcoef_loop(matrix):
-    # Old solution that iterates through all posible combinations. Still the only one available for very large matrices (> 25000 features).
+    # Old solution that iterates through all posible combinations. Still the only one available for very large
+    # matrices (> 25000 features).
     rows, cols = matrix.shape[0], matrix.shape[1]
     r = np.ones(shape=(rows, rows))
     p = np.ones(shape=(rows, rows))
     for i in range(rows):
-        for j in range(i+1, rows):
+        for j in range(i + 1, rows):
             r_, p_ = ss.pearsonr(matrix[i], matrix[j])
             r[i, j] = r[j, i] = r_
             p[i, j] = p[j, i] = p_
     return r, p
 
-dummy = np.random.rand(50,200) # genes and 200 samples.
+
+dummy = np.random.rand(50, 200)  # genes and 200 samples.
 
 r0, p0, p0adj = corrcoef_pval(dummy)
 r1, p1 = corrcoef_loop(dummy)
 
-r0 == r1 # If we round the result we see it's the same.
-p0 == p1
+print(r0 == r1)  # If we round the result we see it's the same.
+print(p0 == p1)
