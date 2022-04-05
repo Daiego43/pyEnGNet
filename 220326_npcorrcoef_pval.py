@@ -54,7 +54,7 @@ def corrcoef_loop(matrix):
     return r, p
 
 
-dummy = np.random.rand(50, 200)  # genes and 200 samples.
+dummy = np.random.rand(50, 200)  # 50 genes and 200 samples.
 
 r0, p0, p0adj = corrcoef_pval(dummy)
 r1, p1 = corrcoef_loop(dummy)
