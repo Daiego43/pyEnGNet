@@ -7,21 +7,9 @@ import warnings
 
 warnings.filterwarnings('ignore')
 
-
-def extract_nparray(filename):
-    df = pd.read_csv(filename, delimiter=',')
-    df = df.loc[:, df.columns != 'genes']
-    cleandataset = df.to_numpy()
-    return cleandataset
-
-
 sameval = 0.5
 
-
 class PyEnGNet:
-
-
-
     def __init__(self, nparr=None, nmi_th=sameval, spearman_th=sameval, kendall_th=sameval):
         if nparr is not None:
             self.maindata = nparr
@@ -89,7 +77,6 @@ class PyEnGNet:
             ans = 1
         return ans, abs(corr)
 
-
     def engnet_1_0(self):
         engnet_accepted_values = []
         major_voting = 0
@@ -119,7 +106,7 @@ class PyEnGNet:
                 # Si se obtiene una mayoría, entonces la relacion se considera apta, se guarda la arista que los
                 # representa y se calcula el peso asociado a dicha arista
                 if major_voting >= 2:
-                    engnet_accepted_values.append([i, j, self.calculate_weight(tests)])
+                    engnet_accepted_values.append((i, j, {'weight': self.calculate_weight(tests)}))
 
                 major_voting = 0
 
