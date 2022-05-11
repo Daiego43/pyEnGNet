@@ -3,7 +3,7 @@ import scipy.stats as scp
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics.cluster import normalized_mutual_info_score
-import warnings
+import networkx as nx
 
 
 sameval = 0.7
@@ -157,19 +157,29 @@ class PyEnGNet:
     def engnet_1_0(self):
         engnet_accepted_values = []
         major_voting = 0
-        for i in range(self.row_size):
+        for i in tqdm(range(self.row_size)):
             for j in range(i + 1, self.row_size):
                 self.validate_corr(i, j, engnet_accepted_values)
         return engnet_accepted_values
+
+    def full_program(self):
+        aristas = self.engnet_1_0()
+        G = nx.Graph()
+        G.add_edges_from(aristas)
+        G = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
+        edges = nx.to_edgelist(G)
+        return G, edges
 
     def __str__(self):
         return f"PyEnGNet Object with shape ({self.row_size},{self.column_size})"
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
+    df = pd.read_csv("/home/daiego/PycharmProjects/pyEnGNet/pyEnGNet/Notebooks/Data/datasample_big.csv")
     df = df.drop(df.columns[[0, 2]], axis=1)
     print(df)
     data = df.to_numpy()
     peg = PyEnGNet(nparr=data)
-    peg.engnet_1_0()
+    aristas = peg.full_program()
+    for a in aristas:
+        print(a)
