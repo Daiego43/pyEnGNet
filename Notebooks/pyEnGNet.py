@@ -1,16 +1,31 @@
+import concurrent.futures
+
 import pandas as pd
 import scipy.stats as scp
 import numpy as np
 from tqdm import tqdm
 from sklearn.metrics.cluster import normalized_mutual_info_score
 import networkx as nx
-
+import multiprocessing as mp
+from concurrent.futures import ProcessPoolExecutor
 
 sameval = 0.7
 
 
+def intervals(total, partes):
+    lenpartes = int(total / partes)
+    lista = []
+    for i in range(partes):
+        if i == partes - 1:
+            end = total
+        else:
+            end = lenpartes * (i + 1)
+        lista.append((lenpartes * i, end))
+    return lista
+
+
 class PyEnGNet:
-    def __init__(self, nparr=None, nmi_th=sameval, spearman_th=sameval, kendall_th=sameval, pearson_th=sameval):
+    def __init__(self, nparr=None, nmi_th=sameval, spearman_th=sameval, kendall_th=sameval, pearson_th=sameval, cores=int(mp.cpu_count()/2)):
         if nparr is not None:
             self.maindata = nparr
         else:
@@ -23,6 +38,8 @@ class PyEnGNet:
         self.kendall_threshold = kendall_th
         self.nmi_threshold = nmi_th
         self.pearson_threshold = pearson_th
+
+        self.ncores = cores
 
     # Calcular el coeficiente de correlación de spearman (Slow but correct way)
     def spearman_corr(self):
@@ -154,16 +171,32 @@ class PyEnGNet:
                 weight.append(test[1])
         return np.mean(weight)
 
-    def engnet_1_0(self):
-        engnet_accepted_values = []
-        major_voting = 0
-        for i in tqdm(range(self.row_size)):
+    def edge_corr_validation(self, start, end):
+        accepted = []
+        for i in tqdm(range(start, end)):
             for j in range(i + 1, self.row_size):
-                self.validate_corr(i, j, engnet_accepted_values)
-        return engnet_accepted_values
+                self.validate_corr(i, j, accepted)
+        return accepted
 
-    def full_program(self):
-        aristas = self.engnet_1_0()
+    def mainmethod(self):
+        intervalos = intervals(len(self.maindata), self.ncores)
+        edges = []
+
+        with ProcessPoolExecutor(max_workers=self.ncores) as executor:
+            results = []
+            for rango in intervalos:
+                start = rango[0]
+                end = rango[1]
+                results.append(executor.submit(self.edge_corr_validation, start, end))
+
+        for f in concurrent.futures.as_completed(results):
+            for val in f.result():
+                edges.append(val)
+
+        return edges
+
+    def engnet_1_0(self):
+        aristas = self.mainmethod()
         G = nx.Graph()
         G.add_edges_from(aristas)
         G = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
@@ -175,11 +208,8 @@ class PyEnGNet:
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("/home/daiego/PycharmProjects/pyEnGNet/pyEnGNet/Notebooks/Data/datasample_big.csv")
+    df = pd.read_csv("/home/daiego/PycharmProjects/pyEnGNet/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
     df = df.drop(df.columns[[0, 2]], axis=1)
-    print(df)
     data = df.to_numpy()
     peg = PyEnGNet(nparr=data)
-    aristas = peg.full_program()
-    for a in aristas:
-        print(a)
+    G, aristas = peg.engnet_1_0()
