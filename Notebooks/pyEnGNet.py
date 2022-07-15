@@ -10,7 +10,7 @@ import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
 import math
 
-sameval = 0.7
+sameval = 0
 
 
 def intervals(total, partes):
@@ -225,12 +225,9 @@ class PyEnGNet:
         w = self.maindata[j]
 
         # Agregamos las respuestas de los tests a una lista que servirá para el calculo de los pesos
-        #tests = [self.single_nmi(v, w), self.single_kendall(
-        #    v, w), self.single_spearman(v, w)]
-
-        tests = [self.single_pearson(v, w), self.single_kendall(
+        tests = [self.single_nmi(v, w), self.single_kendall(
             v, w), self.single_spearman(v, w)]
-
+            
         for test in tests:
             major_voting += test[0]
 
@@ -272,12 +269,12 @@ class PyEnGNet:
 
     def engnet_1_0(self):
         oedges = self.mainmethod()
-        G = nx.Graph()
-        G.add_edges_from(oedges)
-        G2 = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
-        G3 = self.readd_edges(G, G2)
-        fedges = nx.to_edgelist(G3)
-        return G3, fedges
+        #G = nx.Graph()
+        #G.add_edges_from(oedges)
+        #G2 = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
+        #G3 = self.readd_edges(G, G2)
+        #fedges = nx.to_edgelist(G3)
+        #return G3, fedges
 
     def readd_edges(self, graph0, graph2):
 
@@ -315,8 +312,9 @@ class PyEnGNet:
 
 if __name__ == "__main__":
     df = pd.read_csv(
-        "/media/principalpc/DATOS/git-repositories/pyEnGNet/Notebooks/Data/genes_10.csv")
+        "/media/principalpc/DATOS/git-repositories/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
     df = df.drop(df.columns[[0, 2]], axis=1)
     data = df.to_numpy()
     peg = PyEnGNet(nparr=data)
-    G, aristas = peg.engnet_1_0()
+    #G, aristas = peg.engnet_1_0()
+    peg.engnet_1_0()
