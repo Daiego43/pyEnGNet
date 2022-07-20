@@ -8,9 +8,8 @@ from sklearn.metrics.cluster import normalized_mutual_info_score
 import networkx as nx
 import multiprocessing as mp
 from concurrent.futures import ProcessPoolExecutor
-import math
 
-sameval = 0
+sameval = 0.7
 
 
 def intervals(total, partes):
@@ -49,8 +48,7 @@ class PyEnGNet:
         spearmanpvalues = np.zeros((self.row_size, self.row_size))
         for i in tqdm(range(self.row_size)):
             for j in range(i + 1, self.row_size):
-                spearmancorrs[i][j], spearmanpvalues[i][j] = scp.spearmanr(
-                    self.maindata[i], self.maindata[j])
+                spearmancorrs[i][j], spearmanpvalues[i][j] = scp.spearmanr(self.maindata[i], self.maindata[j])
         return spearmancorrs, spearmanpvalues
 
     # Calcular el coeficiente de correlación de Kendall
@@ -59,8 +57,7 @@ class PyEnGNet:
         kendallpvalues = np.zeros((self.row_size, self.row_size))
         for i in tqdm(range(self.row_size)):
             for j in range(i + 1, self.row_size):
-                kendallcorrs[i][j], kendallpvalues[i][j] = scp.kendalltau(
-                    self.maindata[i], self.maindata[j])
+                kendallcorrs[i][j], kendallpvalues[i][j] = scp.kendalltau(self.maindata[i], self.maindata[j])
 
         return kendallcorrs, kendallpvalues
 
@@ -69,102 +66,37 @@ class PyEnGNet:
         pearsonpvalues = np.zeros((self.row_size, self.row_size))
         for i in tqdm(range(self.row_size)):
             for j in range(i + 1, self.row_size):
-                pearsoncorrs[i][j], pearsonpvalues[i][j] = scp.pearsonr(
-                    self.maindata[i], self.maindata[j])
+                pearsoncorrs[i][j], pearsonpvalues[i][j] = scp.pearsonr(self.maindata[i], self.maindata[j])
 
         return pearsoncorrs, pearsonpvalues
 
     # Calcular el NMI
-    def calculateEntropy(self, gen, genNormalized, size):
-        LOG_BASE = 2.0
-        probMap = [0.0] * (2)
-        iColumn = 0
-        while (iColumn < size):
-            iExpr = genNormalized[iColumn]
-            probMap[iExpr] = probMap[iExpr] + 1
-            iColumn += 1
-        iCont = 0
-        while (iCont < 2):
-            probMap[iCont] = probMap[iCont] / size
-            iCont += 1
-        dEntropy = 0.0
-        iCont = 0
-        while (iCont < 2):
-            varAux = probMap[iCont]
-            if (varAux > 0.0):
-                dEntropy -= varAux * math.log(varAux)
-            iCont += 1
-        dEntropy /= math.log(LOG_BASE)
-        return dEntropy
-
-    def normalizedArray(self, gen, genNormalized, size):
-        maxValue = 0
-        if (size > 0):
-            minValue = int(math.floor(gen[0]))
-            maxValue = int(math.floor(gen[0]))
-            iCont = 0
-            while (iCont < size):
-                iExp = int(math.floor(gen[iCont]))
-                genNormalized[iCont] = iExp
-                if (iExp < minValue):
-                    minValue = iExp
-                if (iExp > maxValue):
-                    maxValue = iExp
-                iCont += 1
-            iCont = 0
-            while (iCont < size):
-                genNormalized[iCont] -= minValue
-                iCont += 1
-            maxValue = maxValue - minValue + 1
-        return maxValue
-
-    def calculateMutualInformation(self, gen1, gen2, size, maxVal):
-        LOG_BASE = 2.0
-        probMap = [0.0] * (8)
-        # 2 (gen1) + 2 (gen2) + 4 (joint)
-        iColumn = 0
-        while (iColumn < size):
-            valGen1Column = gen1[iColumn]
-            valGen2Column = gen2[iColumn]
-            probMap[valGen1Column] = probMap[valGen1Column] + 1
-            probMap[valGen2Column + 2] = probMap[valGen2Column + 2] + 1
-            probMap[(valGen1Column + maxVal * valGen2Column) +
-                    4] = probMap[(valGen1Column + maxVal * valGen2Column) + 4] + 1
-            iColumn += 1
-        iCont = 0
-        while (iCont < 8):
-            probMap[iCont] = probMap[iCont] / size
-            iCont += 1
-        nMI = 0.0
-        iCont = 0
-        while (iCont < 4):
-            if (probMap[iCont + 4] > 0.0 and probMap[iCont % maxVal] > 0.0 and probMap[(int(iCont / maxVal)) + 2] > 0.0):
-                nMI += probMap[iCont + 4] * math.log(
-                    probMap[iCont + 4] / probMap[iCont % maxVal] / probMap[(int(iCont / maxVal)) + 2])
-            iCont += 1
-        nMI /= math.log(LOG_BASE)
-        return nMI
-
-    def calculationNMI(self, gen1, gen2, size):
-        value = 0.0
-        # Normalized arrays
-        gen1Normalized = [0] * (len(gen1))
-        gen2Normalized = [0] * (len(gen2))
-        maxVal = self.normalizedArray(gen1, gen1Normalized, len(gen1))
-        self.normalizedArray(gen2, gen2Normalized, len(gen2))
-        try:
-            value = 2.0 * self.calculateMutualInformation(gen1Normalized, gen2Normalized, size, maxVal) / (
-                self.calculateEntropy(gen1, gen1Normalized, size) + self.calculateEntropy(gen2, gen2Normalized, size))
-        except Exception as e:
-            value = 0.0
-        return value
+    def nmi_corr(self, precission):
+        nmi_values = np.zeros((self.row_size, self.row_size))
+        for i in tqdm(range(self.row_size)):
+            for j in range(i + 1, self.row_size):
+                v1 = list(map(lambda x: round(x, precission), self.maindata[i]))
+                v2 = list(map(lambda x: round(x, precission), self.maindata[j]))
+                nmi_values[i][j] = normalized_mutual_info_score(v1, v2)
+        return nmi_values
 
     # Calcula el NMI entre dos vectores
-    def single_nmi(self, arr1, arr2):
-        corr = self.calculationNMI(arr1, arr2, len(arr1))
-        if math.isnan(corr):
-            corr = 0
+    def single_nmi(self, arr1, arr2, precission=1):
+        """
+        Calcula el NMI entre dos vectores y devuelve
+            ans -> 1 si pasa el umbral, 0 en caso contrario
+            corr -> El valor resultante de aplicar Normalized Mutual Info
+
+        :param arr1:
+        :param arr2:
+        :param precission:
+        :return ans, corr:
+        """
         ans = 0
+        rnd = lambda x: round(x, precission)
+        v1 = np.array(list(map(rnd, arr1)))
+        v2 = np.array(list(map(rnd, arr2)))
+        corr = normalized_mutual_info_score(v1, v2)
         if corr >= self.nmi_threshold:
             ans = 1
         return ans, corr
@@ -225,15 +157,14 @@ class PyEnGNet:
         w = self.maindata[j]
 
         # Agregamos las respuestas de los tests a una lista que servirá para el calculo de los pesos
-        tests = [self.single_nmi(v, w), self.single_kendall(
-            v, w), self.single_spearman(v, w)]
-            
+        tests = [self.single_pearson(v, w), self.single_kendall(v, w), self.single_spearman(v, w)]
+
         for test in tests:
             major_voting += test[0]
 
         if major_voting >= 2:
             accepted_values.append(
-                (i, j, {'weight': self.calculate_weight(tests)}))
+                [i, j, {'weight': self.calculate_weight(tests)}])
 
     def calculate_weight(self, tests):
         weight = []
@@ -258,8 +189,7 @@ class PyEnGNet:
             for rango in intervalos:
                 start = rango[0]
                 end = rango[1]
-                results.append(executor.submit(
-                    self.edge_corr_validation, start, end))
+                results.append(executor.submit(self.edge_corr_validation, start, end))
 
         for f in concurrent.futures.as_completed(results):
             for val in f.result():
@@ -272,8 +202,10 @@ class PyEnGNet:
         #G = nx.Graph()
         #G.add_edges_from(oedges)
         #G2 = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
+
         #G3 = self.readd_edges(G, G2)
         #fedges = nx.to_edgelist(G3)
+
         #return G3, fedges
 
     def readd_edges(self, graph0, graph2):
@@ -282,39 +214,39 @@ class PyEnGNet:
         tree_edges = nx.to_edgelist(graph2)
 
         # Obtain eliminated edges
-        eliminated_edges = [
-            edge for edge in origin_edges if edge not in tree_edges]
+        eliminated_edges = [edge for edge in origin_edges if edge not in tree_edges]
 
-        # Obtain hubs        
-        mean_degree = round(np.mean([graph2.degree(node) for node in graph2.nodes if graph2.degree(node) > 2]))
-        
-        hubs = []
-        for node in graph2.nodes:
-            if graph2.degree(node) >= mean_degree:
-                hubs.append(node)
+        # Obtain hubs
+        detected_hubs = [graph2.degree(node) for node in graph2.nodes if graph2.degree(node) > 2]
 
-        readded = []
-        for node in hubs:
-            for e in eliminated_edges:
-                if (node in e) and (e not in readded) and (e[2]['weight'] > self.readded_edges_threshold):
-                    readded.append(e)
+        if len(detected_hubs) != 0:
+            mean_degree = round(np.mean([graph2.degree(node) for node in graph2.nodes if graph2.degree(node) > 2]))
+            hubs = []
+            for node in graph2.nodes:
+                if graph2.degree(node) >= mean_degree:
+                    hubs.append(node)
 
-        print(readded)
-        G3 = nx.Graph()
-        G3.add_edges_from(nx.to_edgelist(graph2))
-        G3.add_edges_from(readded)
+            readded = []
+            for node in hubs:
+                for e in eliminated_edges:
+                    if (node in e) and (e not in readded) and (e[2]['weight'] > self.readded_edges_threshold):
+                        readded.append(e)
+            G3 = nx.Graph()
+            G3.add_edges_from(nx.to_edgelist(graph2))
+            G3.add_edges_from(readded)
 
         return G3
+
 
     def __str__(self):
         return f"PyEnGNet Object with shape ({self.row_size},{self.column_size})"
 
 
 if __name__ == "__main__":
-    df = pd.read_csv(
-        "/media/principalpc/DATOS/git-repositories/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
+    df = pd.read_csv("/home/daiego/PycharmProjects/pyEnGNet/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
     df = df.drop(df.columns[[0, 2]], axis=1)
     data = df.to_numpy()
     peg = PyEnGNet(nparr=data)
-    #G, aristas = peg.engnet_1_0()
-    peg.engnet_1_0()
+    G, aristas = peg.engnet_1_0()
+
+

@@ -1,6 +1,21 @@
 # PyEnGNet 1.0
 
-En el presente documento pasaremos a mostrar paso por paso el funcionamiento del algoritmo EnGNet, para extraer redes de coexpresión a partir de datos de expresión genética tras ser sometidos a diversas metodologías.
+# Introducción
+Las principales aplicaciones de esta nueva herramienta desarrollada en la Universidad Pablo de Olavide se centran en el campo de la Bioinformática y la Biomedicina. Así, por ejemplo con EnGNet 1.0 es posible llevar a cabo análisis biomédicos de diferentes procesos biológicos tales como análisis de biomarcadores, interacciones gen-gene entre otros. Actualmente la utilidad del software ha sido testada en el análisis del síndrome de estrés postraumático.
+
+Y es que las redes genéticas se han convertido en una herramienta poderosa en el análisis integral de la expresión génica. Debido a la creciente cantidad de datos genéticos disponibles, los métodos computacionales para la generación de redes deben hacer frente a la llamada maldición de la dimensionalidad en la búsqueda de la fiabilidad de los resultados obtenidos. En este contexto, las técnicas de ensemble learning han mejorado significativamente la precisión de los resultados al combinar diferentes medidas, algoritmos o métodos.  Por otro lado, las técnicas de optimización topológicas también son importantes en la reducción del tamaño de las redes, no sólo mejorando su arquitectura de red sino también manteniendo significancia biológica.
+
+EnGNet 1.0 es una aplicación informática que implementa una nueva metodología de explotación de datos de expresión genética denominada EnGNet.  EnGNet es un nuevo algoritmo de dos pasos para la generación de redes de genes. 
+
+En primer lugar, el programa emplea una técnica de ensemble (“comité de máquinas”)  para la generación de redes de co-expresión genética.
+
+En segundo lugar, un algoritmo voraz optimiza tanto el tamaño como las características topológicas de la red. Este método no sólo es capaz de obtener redes fiables, sino que también mejora significativamente las características topológicas.
+
+La herramienta EnGNet fue desarrollada originalmente en el lenguaje de programación Java, ahora queremos dar el paso a 
+migrar la tecnología al popular lenguaje de programación python
+
+
+
 
 
 ```python
