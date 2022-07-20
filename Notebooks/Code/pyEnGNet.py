@@ -42,43 +42,7 @@ class PyEnGNet:
         self.readded_edges_threshold = readded_th
         self.ncores = cores
 
-    # Calcular el coeficiente de correlación de spearman (Slow but correct way)
-    def spearman_corr(self):
-        spearmancorrs = np.zeros((self.row_size, self.row_size))
-        spearmanpvalues = np.zeros((self.row_size, self.row_size))
-        for i in tqdm(range(self.row_size)):
-            for j in range(i + 1, self.row_size):
-                spearmancorrs[i][j], spearmanpvalues[i][j] = scp.spearmanr(self.maindata[i], self.maindata[j])
-        return spearmancorrs, spearmanpvalues
 
-    # Calcular el coeficiente de correlación de Kendall
-    def kendall_corr(self):
-        kendallcorrs = np.zeros((self.row_size, self.row_size))
-        kendallpvalues = np.zeros((self.row_size, self.row_size))
-        for i in tqdm(range(self.row_size)):
-            for j in range(i + 1, self.row_size):
-                kendallcorrs[i][j], kendallpvalues[i][j] = scp.kendalltau(self.maindata[i], self.maindata[j])
-
-        return kendallcorrs, kendallpvalues
-
-    def pearson_corr(self):
-        pearsoncorrs = np.zeros((self.row_size, self.row_size))
-        pearsonpvalues = np.zeros((self.row_size, self.row_size))
-        for i in tqdm(range(self.row_size)):
-            for j in range(i + 1, self.row_size):
-                pearsoncorrs[i][j], pearsonpvalues[i][j] = scp.pearsonr(self.maindata[i], self.maindata[j])
-
-        return pearsoncorrs, pearsonpvalues
-
-    # Calcular el NMI
-    def nmi_corr(self, precission):
-        nmi_values = np.zeros((self.row_size, self.row_size))
-        for i in tqdm(range(self.row_size)):
-            for j in range(i + 1, self.row_size):
-                v1 = list(map(lambda x: round(x, precission), self.maindata[i]))
-                v2 = list(map(lambda x: round(x, precission), self.maindata[j]))
-                nmi_values[i][j] = normalized_mutual_info_score(v1, v2)
-        return nmi_values
 
     # Calcula el NMI entre dos vectores
     def single_nmi(self, arr1, arr2, precission=1):
@@ -199,14 +163,14 @@ class PyEnGNet:
 
     def engnet_1_0(self):
         oedges = self.mainmethod()
-        #G = nx.Graph()
-        #G.add_edges_from(oedges)
-        #G2 = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
+        G = nx.Graph()
+        G.add_edges_from(oedges)
+        G2 = nx.maximum_spanning_tree(G, weight='weight', algorithm="kruskal")
 
-        #G3 = self.readd_edges(G, G2)
-        #fedges = nx.to_edgelist(G3)
+        G3 = self.readd_edges(G, G2)
+        fedges = nx.to_edgelist(G3)
 
-        #return G3, fedges
+        return G3, fedges
 
     def readd_edges(self, graph0, graph2):
 
@@ -243,7 +207,7 @@ class PyEnGNet:
 
 
 if __name__ == "__main__":
-    df = pd.read_csv("/home/daiego/PycharmProjects/pyEnGNet/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
+    df = pd.read_csv("/pyEnGNet/Notebooks/Data/113_exp_mat_cond_1.csv")
     df = df.drop(df.columns[[0, 2]], axis=1)
     data = df.to_numpy()
     peg = PyEnGNet(nparr=data)

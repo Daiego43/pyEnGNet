@@ -1,4 +1,4 @@
-from pyEnGNet import PyEnGNet
+from pyEnGNet.Notebooks.Code.pyEnGNet import PyEnGNet
 import numpy as np
 import time as t
 
@@ -7,7 +7,7 @@ numcores = 8
 
 
 print("EN PROGRESO: TESTS DE TIEMPOS PARA MATRIZ 500 X 500")
-with open("Data/Performance measures/t_num_cores_500x500.csv", "a") as f:
+with open("../Data/Performance measures/t_num_cores_500x500.csv", "a") as f:
     f.write("numcores,tiempo(s)\n")
     for ncores in [1, 2, 4, 6, 8]:
         print("Calculando con", ncores, "cores")
