@@ -540,7 +540,6 @@ void threadsPerDevice(int id, cudaStream_t s, ulong chunks,
 
 			fileResults << "g1;g2;kendall_tau;spearman;nmi"
 						<< "\n";
-			cout << id << " - " << pairsPerRun << endl;
 			for (ulong iRow = 0; iRow < pairsPerRun; iRow++)
 			{
 				ulong pattern = iRow + pairsPerGpuPrevious;
@@ -561,9 +560,6 @@ void threadsPerDevice(int id, cudaStream_t s, ulong chunks,
 						{
 							r2 = (j + auxPat) + (r1 + 1);
 						}
-					}
-					if(iRow == 0){
-						cout << "GPU: " << id << "( "<< r1 << "," << r2 << ")" << endl;
 					}
 
 					int iMajorVoting = 0;
